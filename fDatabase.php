@@ -36,6 +36,8 @@
  *  - SQLite
  *   - [http://php.net/pdo_sqlite pdo_sqlite] (for v3.x)
  *   - [http://php.net/sqlite sqlite] (for v2.x)
+ *  - SQLSRV
+ *   - [https://www.php.net/manual/en/book.sqlsrv.php]
  *
  * The `odbc` and `pdo_odbc` extensions are not supported due to character
  * encoding and stability issues on Windows, and functionality on non-Windows
@@ -243,6 +245,12 @@ class fDatabase
 	 */
 	private $username;
 
+	/**
+	 * The default characterSet UF8 for sqlsrv SCP
+	 *
+	 * @var string
+	 */
+	private $characterSet = "UTF-8";
 
 	/**
 	 * Configures the connection to a database - connection is not made until the first query is executed
@@ -753,8 +761,16 @@ class fDatabase
 			if ($this->timeout !== NULL) {
 				$options['LoginTimeout'] = $this->timeout;
 			}
-
-			$this->connection = sqlsrv_connect($this->host . ',' . $this->port, $options);
+			
+			if ($this->characterSet !== NULL) {
+				$options['CharacterSet'] = $this->characterSet;
+			}
+		
+			if( $this->port ){ /* SCP */
+				$this->connection = sqlsrv_connect($this->host . ',' . $this->port, $options);
+			}else{
+				$this->connection = sqlsrv_connect($this->host , $options);
+			}	
 
 			if ($this->connection === FALSE) {
 				$errors = sqlsrv_errors();
